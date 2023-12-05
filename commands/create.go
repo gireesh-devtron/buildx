@@ -29,17 +29,18 @@ import (
 )
 
 type createOptions struct {
-	name         string
-	driver       string
-	nodeName     string
-	platform     []string
-	actionAppend bool
-	actionLeave  bool
-	use          bool
-	flags        string
-	configFile   string
-	driverOpts   []string
-	bootstrap    bool
+	name             string
+	driver           string
+	nodeName         string
+	platform         []string
+	actionAppend     bool
+	actionLeave      bool
+	use              bool
+	flags            string
+	configFile       string
+	driverOpts       []string
+	bootstrap        bool
+	loadNodesTimeout int8
 	// upgrade      bool // perform upgrade of the driver
 }
 
@@ -247,7 +248,8 @@ func runCreate(dockerCli command.Cli, in createOptions, args []string) error {
 		return err
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	timeout := time.Duration(in.loadNodesTimeout) * time.Second
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	nodes, err := b.LoadNodes(timeoutCtx, true)
@@ -325,7 +327,7 @@ func createCmd(dockerCli command.Cli) *cobra.Command {
 	flags.BoolVar(&options.actionAppend, "append", false, "Append a node to builder instead of changing it")
 	flags.BoolVar(&options.actionLeave, "leave", false, "Remove a node from builder instead of changing it")
 	flags.BoolVar(&options.use, "use", false, "Set the current builder instance")
-
+	flags.Int8Var(&options.loadNodesTimeout, "load-nodes-timeout", 20, "Set the timeout for loading kubernetes driver nodes")
 	// hide builder persistent flag for this command
 	cobrautil.HideInheritedFlags(cmd, "builder")
 
