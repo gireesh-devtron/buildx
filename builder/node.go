@@ -180,6 +180,7 @@ func (n *Node) loadData(ctx context.Context) error {
 		}
 		workers, err := driverClient.ListWorkers(ctx)
 		if err != nil {
+			logrus.Errorf("log-devtron : error in ListWorkers, %s:%s", " err ", err.Error())
 			return errors.Wrap(err, "listing workers")
 		}
 		for _, w := range workers {

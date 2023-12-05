@@ -84,6 +84,7 @@ func ListRunningPods(ctx context.Context, client clientcorev1.PodInterface, depl
 	}
 	podList, err := client.List(ctx, listOpts)
 	if err != nil {
+		logrus.Errorf("log-devtron : error in listing pod by labelSelector, %s:%s", " labelSelector ", selector.String())
 		return nil, err
 	}
 	var runningPods []*corev1.Pod

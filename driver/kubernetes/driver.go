@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
@@ -134,6 +135,7 @@ func (d *Driver) Info(ctx context.Context) (*driver.Info, error) {
 	}
 	pods, err := podchooser.ListRunningPods(ctx, d.podClient, depl)
 	if err != nil {
+		logrus.Errorf("log-devtron : error in listing pod by labelSelector, %s:%s", " err ", err.Error())
 		return nil, err
 	}
 	var dynNodes []store.Node
