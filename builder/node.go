@@ -188,9 +188,10 @@ func (n *Node) loadData(ctx context.Context) error {
 			ctx1, _ := context.WithTimeout(ctx, 20*time.Second)
 
 			workers, err = driverClient.ListWorkers(ctx1)
-			if err != nil {
-				logrus.Errorf("log-devtron : error in retrying ListWorkers, %s:%s , retry_count : %d", " err ", err.Error(), try)
+			if err == nil {
+				break
 			}
+			logrus.Errorf("log-devtron : error in retrying ListWorkers, %s:%s , retry_count : %d", " err ", err.Error(), try)
 		}
 
 		if err != nil {
