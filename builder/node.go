@@ -2,6 +2,8 @@ package builder
 
 import (
 	"context"
+	"github.com/moby/buildkit/client"
+	"time"
 
 	"github.com/docker/buildx/driver"
 	ctxkube "github.com/docker/buildx/driver/kubernetes/context"
@@ -20,13 +22,14 @@ import (
 
 type Node struct {
 	store.Node
-	Driver      driver.Driver
-	DriverInfo  *driver.Info
-	Platforms   []ocispecs.Platform
-	ImageOpt    imagetools.Opt
-	ProxyConfig map[string]string
-	Version     string
-	Err         error
+	Driver            driver.Driver
+	DriverInfo        *driver.Info
+	Platforms         []ocispecs.Platform
+	ImageOpt          imagetools.Opt
+	ProxyConfig       map[string]string
+	Version           string
+	Err               error
+	listWorkerRetries int
 }
 
 // Nodes returns nodes for this builder.
@@ -174,13 +177,24 @@ func (n *Node) loadData(ctx context.Context) error {
 	}
 	n.DriverInfo = info
 	if n.DriverInfo.Status == driver.Running {
+
+		workers := make([]*client.WorkerInfo, 0)
 		driverClient, err := n.Driver.Client(ctx)
 		if err != nil {
 			return err
 		}
-		workers, err := driverClient.ListWorkers(ctx)
+
+		for try := 0; try < 5; try++ {
+			ctx1, _ := context.WithTimeout(ctx, 20*time.Second)
+
+			workers, err = driverClient.ListWorkers(ctx1)
+			if err != nil {
+				logrus.Errorf("log-devtron : error in retrying ListWorkers, %s:%s , retry_count : %d", " err ", err.Error(), try)
+			}
+		}
+
 		if err != nil {
-			logrus.Errorf("log-devtron : error in ListWorkers, %s:%s", " err ", err.Error())
+			logrus.Errorf("log-devtron : error in retrying ListWorkers, %s:%s ,exhausted retries", " err ", err.Error())
 			return errors.Wrap(err, "listing workers")
 		}
 		for _, w := range workers {

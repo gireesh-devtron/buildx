@@ -249,12 +249,13 @@ func runCreate(dockerCli command.Cli, in createOptions, args []string) error {
 		return err
 	}
 
-	if in.loadNodesTimeout == 0 {
+	defaultTimeout := 100
+	if in.loadNodesTimeout < defaultTimeout {
 		timeoutVar := os.Getenv("LOAD_NODES_TIMEOUT")
 		if timeoutVar == "" {
-			in.loadNodesTimeout = 20
+			in.loadNodesTimeout = defaultTimeout
 		} else {
-			if to, err := strconv.Atoi(timeoutVar); err != nil {
+			if to, err := strconv.Atoi(timeoutVar); err != nil && to > defaultTimeout {
 				in.loadNodesTimeout = to
 			}
 		}
